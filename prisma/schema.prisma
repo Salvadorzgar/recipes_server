@@ -1,0 +1,63 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Ingredient {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  recipes   RecipeIngredient[]  // Many-to-many through RecipeIngredient
+  fridges   FridgeIngredient[]  // Many-to-many through FridgeIngredient
+}
+
+model Instruction {
+  id          Int     @id @default(autoincrement())
+  instruction String
+  position    Int
+  recipe      Recipe  @relation(fields: [recipeid], references: [id])
+  recipeid    Int
+}
+
+model Recipe {
+  id            Int       @id @default(autoincrement())
+  name          String    @unique
+  cooktime      Int?
+  photourl      String?
+  instructions  Instruction[]
+  ingredients   RecipeIngredient[]  // Many-to-many through RecipeIngredient
+}
+
+model Fridge {
+  id            Int               @id @default(autoincrement())
+  ingredients   FridgeIngredient[]  // Many-to-many through FridgeIngredient
+}
+
+// Junction table to store quantities for each ingredient in a recipe
+model RecipeIngredient {
+  id            Int       @id @default(autoincrement())
+  recipe        Recipe    @relation(fields: [recipeid], references: [id])
+  recipeid      Int
+  ingredient    Ingredient @relation(fields: [ingredientid], references: [id])
+  ingredientid  Int
+  quantityNeeded Int
+}
+
+// Junction table for fridge to store ingredient quantities
+model FridgeIngredient {
+  id            Int       @id @default(autoincrement())
+  fridge        Fridge    @relation(fields: [fridgeid], references: [id])
+  fridgeid      Int
+  ingredient    Ingredient @relation(fields: [ingredientid], references: [id])
+  ingredientid  Int
+  quantityAvailable Int
+}
